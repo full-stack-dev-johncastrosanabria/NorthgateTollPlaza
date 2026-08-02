@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: audit-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/northgate_audit
+
+server:
+  port: 8081
+
+northgate:
+  jwt:
+    # Must match toll-service — audit-service only validates, never issues.
+    secret: "northgate-local-dev-secret-change-me-0123456789abcdef"

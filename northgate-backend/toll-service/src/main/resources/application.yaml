@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: toll-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/northgate_toll
+    username: johnbenjamincastrosanabria
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
+
+northgate:
+  jwt:
+    # HS256 shared secret — both services validate tokens with this key. Local dev only.
+    secret: "northgate-local-dev-secret-change-me-0123456789abcdef"
+    expiration-minutes: 480
+  audit:
+    base-url: http://localhost:8081

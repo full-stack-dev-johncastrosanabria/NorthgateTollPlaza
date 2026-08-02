@@ -289,4 +289,11 @@ curl -s https://start.spring.io/starter.tgz -d type=maven-project -d language=ja
 
 **Step 3 — Databases and migrations.** `createdb northgate_toll` (Mongo creates `northgate_audit` lazily). Write `V1__schema.sql` (section 4 DDL) and `V2__seed.sql` (staff OP-14/MG-02 with BCrypt-hashed PIN `1234`, lanes 1–6, the five vehicle classes with prototype fares, one active shift on lane 3). Configure both `application.yaml`s (datasource / `spring.data.mongodb.uri`, ports 8080/8081, shared JWT secret). Verify `mvn spring-boot:run` boots both and Flyway applies cleanly.
 
+**Running the tests.** `./mvnw test` from `northgate-backend`. Surefire supplies
+`NORTHGATE_JWT_SECRET` itself, so nothing needs exporting. The dashboard's SQL is
+covered by `DashboardAggregationTest`, which runs against a real PostgreSQL —
+create it once with `createdb northgate_toll_test`. It applies only the V1 schema
+(`spring.flyway.target=1`, so the V2/V3 demo seed stays out of the fixtures) and
+rolls back every test, leaving both databases untouched.
+
 **Step 4 — Frontend shell + first vertical slice.** `npx @angular/cli@21 new northgate-frontend`, add `proxy.conf.json`, routes `/login → /lane | /dashboard` with role guards. Then build one end-to-end slice before anything else: `POST /auth/login` → JWT stored → `POST /passes` from the lane console → row in PostgreSQL → `PASS_RECORDED` document visible in `northgate_audit.audit_events`. That slice exercises every architectural joint (auth, both services, both databases, the async client); everything after is repetition.

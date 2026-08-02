@@ -29,6 +29,26 @@
         <module>audit-service</module>
     </modules>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <environmentVariables>
+                        <!--
+                          Tests read the secret from the environment exactly as the
+                          services do, rather than shadowing application.yaml (a test
+                          copy replaces the main file wholesale and loses the
+                          datasource). Throwaway value; never used outside tests.
+                        -->
+                        <NORTHGATE_JWT_SECRET>test-only-secret-not-used-outside-the-test-suite</NORTHGATE_JWT_SECRET>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencyManagement>
         <dependencies>
             <dependency>

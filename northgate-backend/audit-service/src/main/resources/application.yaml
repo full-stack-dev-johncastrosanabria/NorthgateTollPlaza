@@ -4,7 +4,7 @@ spring:
   # Boot 4 moved the connection URI to spring.mongodb.*; spring.data.mongodb.uri
   # is silently ignored and falls back to the mongodb://localhost/test default.
   mongodb:
-    uri: mongodb://localhost:27017/northgate_audit
+    uri: ${NORTHGATE_MONGO_URI:mongodb://localhost:27017/northgate_audit}
   data:
     mongodb:
       # Required for the @Indexed annotations, including the plate_scans TTL index.
@@ -16,4 +16,5 @@ server:
 northgate:
   jwt:
     # Must match toll-service — audit-service only validates, never issues.
-    secret: "northgate-local-dev-secret-change-me-0123456789abcdef"
+    # No default: the app must fail fast rather than start on a known secret.
+    secret: ${NORTHGATE_JWT_SECRET}

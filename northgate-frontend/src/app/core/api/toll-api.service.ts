@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { VehicleClass } from '../../shared/models/vehicle-class.model';
 import { Pass, PassRequest } from '../../shared/models/pass.model';
 import { LaneException, ShiftSummary } from '../../shared/models/lane.model';
+import { Dashboard } from '../../shared/models/dashboard.model';
 
 @Injectable({ providedIn: 'root' })
 export class TollApiService {
@@ -31,5 +32,9 @@ export class TollApiService {
 
   overrideException(id: number): Observable<LaneException> {
     return this.http.post<LaneException>(`/api/toll/exceptions/${id}/override`, {});
+  }
+
+  dashboard(): Observable<Dashboard> {
+    return this.http.get<Dashboard>('/api/toll/dashboard');
   }
 }

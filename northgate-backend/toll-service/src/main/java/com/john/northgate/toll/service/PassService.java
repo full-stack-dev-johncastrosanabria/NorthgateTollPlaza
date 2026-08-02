@@ -11,6 +11,7 @@ import com.john.northgate.toll.repository.PassRepository;
 import com.john.northgate.toll.repository.ShiftRepository;
 import com.john.northgate.toll.repository.VehicleClassRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,10 +35,14 @@ public class PassService {
                 .toList();
     }
 
+    /** The console shows the tail of the shift, not the whole of it. */
+    private static final int RECENT_PASS_LIMIT = 25;
+
     @Transactional(readOnly = true)
     public List<PassResponseDto> recentPasses(String staffCode) {
         Shift shift = activeShift(staffCode);
-        return passRepository.findRecentByShift(shift.getId()).stream().map(this::toDto).toList();
+        return passRepository.findRecentByShift(shift.getId(), PageRequest.of(0, RECENT_PASS_LIMIT))
+                .stream().map(this::toDto).toList();
     }
 
     @Transactional

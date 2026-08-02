@@ -1,5 +1,6 @@
 export type ExceptionType = 'UNREAD_TAG' | 'VIOLATION' | 'OVERPAYMENT';
 export type ExceptionStatus = 'OPEN' | 'CLEARED' | 'OVERRIDDEN';
+export type LaneStatus = 'OPEN' | 'CLOSED' | 'FAULT';
 
 export interface LaneException {
   id: number;

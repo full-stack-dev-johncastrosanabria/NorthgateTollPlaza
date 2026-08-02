@@ -1,65 +1,91 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
+import { TollApiService } from '../../core/api/toll-api.service';
+import { Dashboard as DashboardData, LaneStats, TrafficBucket } from '../../shared/models/dashboard.model';
 
-/**
- * Placeholder for the manager plaza overview. The backend aggregate endpoint
- * (GET /api/toll/dashboard) is not built yet — see ARCHITECTURE.md §2.
- */
+const REFRESH_MS = 15_000;
+
 @Component({
   selector: 'app-dashboard',
-  template: `
-    <header class="topbar">
-      <div>
-        <h1>Plaza overview</h1>
-        <p class="sub">Northgate Toll Plaza</p>
-      </div>
-      <div class="topright">
-        <div class="who">
-          <span class="name">{{ session()?.fullName }}</span>
-          <span class="mono cap">{{ session()?.staffCode }}</span>
-        </div>
-        <button class="ghost" (click)="signOut()">Sign out</button>
-      </div>
-    </header>
-
-    <main>
-      <div class="card">
-        <h2>Not built yet</h2>
-        <p>
-          The manager dashboard — plaza KPIs, per-lane cards and traffic by hour — is the next
-          milestone. The operator lane console is the vertical slice that is complete today.
-        </p>
-      </div>
-    </main>
-  `,
-  styles: `
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 26px;
-      background: var(--card);
-      border-bottom: 1px solid var(--line);
-    }
-    h1 { margin: 0; font-size: 21px; }
-    .sub { margin: 2px 0 0; font-size: 13.5px; color: var(--ink-muted); }
-    .topright { display: flex; align-items: center; gap: 22px; }
-    .who { display: flex; flex-direction: column; align-items: flex-end; }
-    .who .name { font-size: 14px; font-weight: 600; }
-    .cap { font-size: 11.5px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .ghost {
-      padding: 8px 14px; background: var(--card); border: 1px solid var(--line);
-      border-radius: 8px; color: var(--ink); font-weight: 500;
-    }
-    main { padding: 22px 26px; }
-    .card { max-width: 620px; padding: 22px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
-    h2 { margin: 0 0 8px; font-size: 16px; }
-    p { margin: 0; color: var(--ink-muted); font-size: 14px; }
-  `,
+  templateUrl: './dashboard.html',
+  styleUrl: './dashboard.css',
 })
-export class Dashboard {
+export class Dashboard implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
+  private readonly toll = inject(TollApiService);
+  private timer?: ReturnType<typeof setInterval>;
+
   protected readonly session = this.auth.session;
+  protected readonly data = signal<DashboardData | null>(null);
+  protected readonly error = signal<string | null>(null);
+  protected readonly updatedAt = signal<Date | null>(null);
+
+  /** Tallest bar sets the scale; guards against divide-by-zero on an empty day. */
+  protected readonly peakTraffic = computed(() =>
+    Math.max(1, ...(this.data()?.trafficByHour ?? []).map((b) => b.vehicles))
+  );
+
+  async ngOnInit(): Promise<void> {
+    await this.load();
+    this.timer = setInterval(() => void this.load(), REFRESH_MS);
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.timer);
+  }
+
+  protected async load(): Promise<void> {
+    try {
+      this.data.set(await firstValueFrom(this.toll.dashboard()));
+      this.updatedAt.set(new Date());
+      this.error.set(null);
+    } catch (e) {
+      this.error.set(
+        e instanceof HttpErrorResponse && e.status === 0
+          ? 'Cannot reach the toll service.'
+          : 'Could not load the plaza overview.'
+      );
+    }
+  }
+
+  protected barHeight(bucket: TrafficBucket): string {
+    return `${Math.max(4, (bucket.vehicles / this.peakTraffic()) * 100)}%`;
+  }
+
+  protected hourLabel(hour: number): string {
+    return `${String(hour).padStart(2, '0')}:00`;
+  }
+
+  protected operatorLabel(lane: LaneStats): string {
+    return lane.operatorName ?? 'Unmanned (automated)';
+  }
+
+  protected statusLabel(status: string): string {
+    return status.charAt(0) + status.slice(1).toLowerCase();
+  }
+
+  protected exceptionLabel(count: number): string {
+    return `${count} open exception${count === 1 ? '' : 's'}`;
+  }
+
+  protected money(amount: number | null | undefined): string {
+    return (amount ?? 0).toFixed(2);
+  }
+
+  protected count(n: number | null | undefined): string {
+    return (n ?? 0).toLocaleString('en-US');
+  }
+
+  protected updatedLabel(): string {
+    const at = this.updatedAt();
+    if (!at) {
+      return 'Loading…';
+    }
+    const seconds = Math.round((Date.now() - at.getTime()) / 1000);
+    return seconds < 20 ? 'Updated just now' : `Updated ${seconds}s ago`;
+  }
 
   protected signOut(): void {
     this.auth.logout();

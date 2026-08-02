@@ -1,0 +1,103 @@
+<header class="topbar">
+  <div>
+    <h1>Plaza overview</h1>
+    <p class="sub">Northgate Toll Plaza · Live</p>
+  </div>
+
+  <div class="topright">
+    <button class="pill" (click)="load()" title="Refresh now">
+      <span class="dot live"></span>{{ updatedLabel() }}
+    </button>
+    <div class="who">
+      <span class="name">{{ session()?.fullName }}</span>
+      <span class="mono cap">{{ session()?.staffCode }}</span>
+    </div>
+    <button class="ghost" (click)="signOut()">Sign out</button>
+  </div>
+</header>
+
+<main>
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (data(); as d) {
+    <section class="kpis">
+      <div class="card kpi">
+        <p class="cap">Revenue today</p>
+        <p class="mono kpi-value">${{ money(d.revenueToday) }}</p>
+      </div>
+      <div class="card kpi">
+        <p class="cap">Vehicles today</p>
+        <p class="mono kpi-value">{{ count(d.vehiclesToday) }}</p>
+      </div>
+      <div class="card kpi">
+        <p class="cap">Lanes open</p>
+        <p class="mono kpi-value">{{ d.lanesOpen }} / {{ d.lanesTotal }}</p>
+      </div>
+      <div class="card kpi">
+        <p class="cap">Vehicles queued</p>
+        <p class="mono kpi-value">{{ count(d.vehiclesQueued) }}</p>
+      </div>
+    </section>
+
+    <div class="section-head">
+      <h2>Lanes</h2>
+      <span class="muted">{{ d.exceptionsAwaitingReview }} exceptions awaiting review</span>
+    </div>
+
+    <section class="lanes">
+      @for (lane of d.lanes; track lane.laneNumber) {
+        <div class="card lane" [class.closed]="lane.status === 'CLOSED'">
+          <div class="lane-head">
+            <h3>Lane {{ lane.laneNumber }}</h3>
+            <span class="status">
+              <span class="dot" [class.open]="lane.status === 'OPEN'" [class.fault]="lane.status === 'FAULT'"></span>
+              {{ statusLabel(lane.status) }}
+            </span>
+          </div>
+
+          <p class="operator">{{ operatorLabel(lane) }}</p>
+
+          <div class="lane-stats">
+            <div>
+              <p class="cap">Queue</p>
+              <p class="mono stat">{{ lane.queueLength }}</p>
+            </div>
+            <div>
+              <p class="cap">Vehicles</p>
+              <p class="mono stat">{{ count(lane.vehiclesToday) }}</p>
+            </div>
+            <div>
+              <p class="cap">Revenue</p>
+              <p class="mono stat">${{ money(lane.revenue) }}</p>
+            </div>
+          </div>
+
+          @if (lane.openExceptions > 0) {
+            <p class="lane-exc">⚠ {{ exceptionLabel(lane.openExceptions) }}</p>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="card chart">
+      <h2>Traffic by hour</h2>
+      <p class="muted">Vehicles through the plaza today</p>
+
+      @if (d.trafficByHour.length) {
+        <div class="bars">
+          @for (bucket of d.trafficByHour; track bucket.hour) {
+            <div class="bar-col">
+              <span class="mono bar-value">{{ count(bucket.vehicles) }}</span>
+              <div class="bar" [style.height]="barHeight(bucket)"></div>
+              <span class="mono bar-label">{{ hourLabel(bucket.hour) }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="muted empty">No traffic recorded today yet.</p>
+      }
+    </section>
+  }
+</main>

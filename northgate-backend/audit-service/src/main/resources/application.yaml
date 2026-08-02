@@ -1,9 +1,14 @@
 spring:
   application:
     name: audit-service
+  # Boot 4 moved the connection URI to spring.mongodb.*; spring.data.mongodb.uri
+  # is silently ignored and falls back to the mongodb://localhost/test default.
+  mongodb:
+    uri: mongodb://localhost:27017/northgate_audit
   data:
     mongodb:
-      uri: mongodb://localhost:27017/northgate_audit
+      # Required for the @Indexed annotations, including the plate_scans TTL index.
+      auto-index-creation: true
 
 server:
   port: 8081

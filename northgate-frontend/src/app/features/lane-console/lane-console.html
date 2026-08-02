@@ -1,0 +1,160 @@
+<header class="topbar">
+  <div>
+    <h1>Lane {{ session()?.laneNumber }}</h1>
+    <p class="sub">
+      Northgate Toll Plaza
+      @if (shift(); as s) {
+        · Shift {{ shiftWindow(s) }}
+      }
+    </p>
+  </div>
+
+  <div class="topright">
+    <div class="total">
+      <span class="mono amount">${{ money(shift()?.collected) }}</span>
+      <span class="cap">Shift total</span>
+    </div>
+    <div class="who">
+      <span class="name">{{ session()?.fullName }}</span>
+      <span class="mono cap">{{ session()?.staffCode }}</span>
+    </div>
+    <button class="ghost" (click)="signOut()">Sign out</button>
+  </div>
+</header>
+
+<main class="grid">
+  <section class="left">
+    <div class="card pad">
+      <h2>New pass</h2>
+
+      <p class="label">Vehicle class</p>
+      <div class="classes">
+        @for (vc of vehicleClasses(); track vc.code) {
+          <button
+            type="button"
+            class="class-btn"
+            [class.selected]="selectedClass()?.code === vc.code"
+            (click)="select(vc)"
+          >
+            <span class="class-name">{{ vc.label }}</span>
+            <span class="mono class-fare">${{ money(vc.fare) }}</span>
+          </button>
+        }
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label class="label" for="plate">Plate</label>
+          <div class="plate-row">
+            <input
+              id="plate"
+              name="plate"
+              class="field"
+              placeholder="Auto-read or type"
+              [(ngModel)]="plate"
+            />
+            <button type="button" class="ghost small" title="Re-read tag" (click)="autoRead()">↻</button>
+          </div>
+          @if (notice()) {
+            <p class="notice">{{ notice() }}</p>
+          }
+        </div>
+
+        <div class="col">
+          <p class="label">Payment</p>
+          <div class="tabs">
+            @for (method of paymentMethods; track method) {
+              <button
+                type="button"
+                class="tab"
+                [class.selected]="payment() === method"
+                (click)="payment.set(method)"
+              >
+                {{ badgeLabel(method) }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <hr class="rule" />
+
+      <div class="pay">
+        <div>
+          <p class="cap">Fare due</p>
+          <p class="mono fare">${{ money(fareDue()) }}</p>
+        </div>
+        <button
+          type="button"
+          class="primary"
+          [disabled]="submitting() || !plate.trim() || !selectedClass()"
+          (click)="takePayment()"
+        >
+          {{ submitting() ? 'Opening gate…' : 'Take payment & open gate' }}
+        </button>
+      </div>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Recent passes</h2>
+        <span class="cap">{{ passes().length }} this shift</span>
+      </div>
+
+      @for (pass of passes(); track pass.id) {
+        <div class="pass-row">
+          <span class="mono time">{{ time(pass.createdAt) }}</span>
+          <span class="mono plate">{{ pass.plate }}</span>
+          <span class="klass">{{ pass.vehicleClassLabel }}</span>
+          <span class="badge">{{ badgeLabel(pass.paymentMethod) }}</span>
+          <span class="mono amt">${{ money(pass.amount) }}</span>
+        </div>
+      } @empty {
+        <p class="empty">No passes recorded yet this shift.</p>
+      }
+    </div>
+  </section>
+
+  <aside class="right">
+    <div class="card">
+      <div class="card-head">
+        <h2 class="warn">⚠ Exceptions</h2>
+        <span class="cap">{{ openExceptions() }} open</span>
+      </div>
+
+      @for (exception of exceptions(); track exception.id) {
+        <div class="exc-row">
+          <div class="exc-top">
+            <span class="mono plate">{{ exception.plate }}</span>
+            <span class="tag" [class.resolved]="exception.status !== 'OPEN'">
+              {{ typeLabel(exception.type) }}
+            </span>
+
+            @if (exception.status === 'OPEN') {
+              <button class="ghost small" (click)="override(exception)">Override</button>
+            } @else {
+              <span class="done">✓ {{ exception.status === 'CLEARED' ? 'Cleared' : 'Overridden' }}</span>
+            }
+          </div>
+          <p class="exc-desc">{{ exception.description }}</p>
+          <p class="mono exc-time">{{ time(exception.createdAt) }}</p>
+        </div>
+      } @empty {
+        <p class="empty">No exceptions on this lane.</p>
+      }
+    </div>
+
+    @if (shift(); as s) {
+      <div class="card pad">
+        <h2>Shift</h2>
+        <div class="stat"><span>Vehicles</span><span class="mono">{{ s.vehicles }}</span></div>
+        <div class="stat"><span>Collected</span><span class="mono">${{ money(s.collected) }}</span></div>
+        <div class="stat"><span>Open exceptions</span><span class="mono">{{ s.openExceptions }}</span></div>
+      </div>
+    }
+  </aside>
+</main>

@@ -3,7 +3,9 @@ spring:
     name: toll-service
   datasource:
     url: ${NORTHGATE_DB_URL:jdbc:postgresql://localhost:5432/northgate_toll}
-    username: ${NORTHGATE_DB_USER:johnbenjamincastrosanabria}
+    # Homebrew PostgreSQL creates a role named after your OS user; run.sh sets
+    # this from `whoami`. Override for any other install.
+    username: ${NORTHGATE_DB_USER:postgres}
     password: ${NORTHGATE_DB_PASSWORD:}
   jpa:
     hibernate:

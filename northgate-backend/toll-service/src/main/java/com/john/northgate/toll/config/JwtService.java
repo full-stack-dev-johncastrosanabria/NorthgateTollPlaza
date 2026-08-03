@@ -35,6 +35,21 @@ public class JwtService {
                 .compact();
     }
 
+    /**
+     * Short-lived token identifying this service to audit-service. Both services
+     * share the HS256 secret, so no auth round-trip is needed.
+     */
+    public String issueServiceToken() {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .subject("toll-service")
+                .claim("role", "SERVICE")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusSeconds(300)))
+                .signWith(key)
+                .compact();
+    }
+
     public Claims parse(String token) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }

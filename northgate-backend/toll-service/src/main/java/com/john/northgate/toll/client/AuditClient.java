@@ -1,8 +1,10 @@
 package com.john.northgate.toll.client;
 
+import com.john.northgate.toll.config.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -20,9 +22,11 @@ public class AuditClient {
     private static final Logger log = LoggerFactory.getLogger(AuditClient.class);
 
     private final RestClient restClient;
+    private final JwtService jwtService;
 
-    public AuditClient(@Value("${northgate.audit.base-url}") String baseUrl) {
+    public AuditClient(@Value("${northgate.audit.base-url}") String baseUrl, JwtService jwtService) {
         this.restClient = RestClient.builder().baseUrl(baseUrl).build();
+        this.jwtService = jwtService;
     }
 
     @Async
@@ -36,7 +40,13 @@ public class AuditClient {
             body.put("entityType", entityType);
             body.put("entityId", entityId);
             body.put("payload", payload);
-            restClient.post().uri("/api/audit/events").body(body).retrieve().toBodilessEntity();
+
+            restClient.post()
+                    .uri("/api/audit/events")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtService.issueServiceToken())
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
         } catch (Exception e) {
             log.warn("Audit event dropped: {} ({})", eventType, e.getMessage());
         }

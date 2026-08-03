@@ -1,0 +1,48 @@
+<div class="wrap">
+  <div class="panel">
+    <div class="logo">T</div>
+    <h1>Northgate Toll Plaza</h1>
+    <p class="sub">Sign in with your staff ID and PIN.</p>
+
+    <form class="card form" (ngSubmit)="submit()">
+      <label class="label" for="staffCode">Staff ID</label>
+      <input
+        id="staffCode"
+        name="staffCode"
+        class="field"
+        placeholder="op-14"
+        autocomplete="username"
+        [(ngModel)]="staffCode"
+      />
+
+      <label class="label" for="pin">PIN</label>
+      <input
+        id="pin"
+        name="pin"
+        type="password"
+        class="field"
+        placeholder="••••"
+        inputmode="numeric"
+        autocomplete="current-password"
+        [(ngModel)]="pin"
+      />
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <button type="submit" class="signin" [disabled]="submitting() || !staffCode || !pin">
+        {{ submitting() ? 'Signing in…' : 'Sign in' }}
+        @if (!submitting()) {
+          <span aria-hidden="true">→</span>
+        }
+      </button>
+    </form>
+
+    <div class="demo">
+      <p class="demo-title">Demo accounts</p>
+      <p class="mono">op-14 · 1234 — booth operator</p>
+      <p class="mono">mg-02 · 1234 — plaza manager</p>
+    </div>
+  </div>
+</div>

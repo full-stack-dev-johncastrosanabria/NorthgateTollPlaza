@@ -1,1 +1,82 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bg: #f1f0ee;
+  --card: #ffffff;
+  --ink: #1c1c1c;
+  --ink-muted: #6f6f6f;
+  --ink-faint: #9a9a9a;
+  --line: #e4e2df;
+  --field: #f4f3f1;
+  --accent: #d0451b;
+  --warn-bg: #fdf1e8;
+  --warn-ink: #c2410c;
+  --ok: #16a34a;
+  --radius: 10px;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+input {
+  font: inherit;
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.field {
+  width: 100%;
+  padding: 11px 13px;
+  background: var(--field);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-family: var(--mono);
+  color: var(--ink);
+}
+
+.field::placeholder {
+  color: var(--ink-faint);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--ink);
+  background: var(--card);
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 7px;
+}

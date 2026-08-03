@@ -2,9 +2,11 @@ spring:
   application:
     name: toll-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/northgate_toll
-    username: johnbenjamincastrosanabria
-    password: ""
+    url: ${NORTHGATE_DB_URL:jdbc:postgresql://localhost:5432/northgate_toll}
+    # Homebrew PostgreSQL creates a role named after your OS user; run.sh sets
+    # this from `whoami`. Override for any other install.
+    username: ${NORTHGATE_DB_USER:postgres}
+    password: ${NORTHGATE_DB_PASSWORD:}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -17,8 +19,9 @@ server:
 
 northgate:
   jwt:
-    # HS256 shared secret — both services validate tokens with this key. Local dev only.
-    secret: "northgate-local-dev-secret-change-me-0123456789abcdef"
+    # No default: the app must fail fast rather than start on a known secret.
+    # See .env.example for the exports both services need.
+    secret: ${NORTHGATE_JWT_SECRET}
     expiration-minutes: 480
   audit:
-    base-url: http://localhost:8081
+    base-url: ${NORTHGATE_AUDIT_URL:http://localhost:8081}
